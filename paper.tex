@@ -5,6 +5,7 @@
 \renewcommand*{\Authand}{, }
 \renewcommand*{\Authands}{, }
 \usepackage{graphics}
+\usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage[url = false, doi = false, backend=biber,style=gb7714-2015,gbalign=gb7714-2015,gbpub=false,gbmedium=false]{biblatex}         
 \usepackage{subfigure}
@@ -178,40 +179,79 @@ output = mesolve(H, psi0, tlist, c_op_list,\
  [a.dag() * a, sm.dag() * sm])
 \end{minted}
 
-结果为图。
+结果为图\ref{fig:1}所示。
 \begin{figure}[htbp]
     \begin{minipage}[t]{0.5\linewidth}
-        \includegraphics[width=0.7\linewidth]{1.png}
+        \centering
+        \includegraphics[width=1.0\linewidth]{1.png}
         \caption{振荡频率条件破坏}
         \label{fig:1}
-    \end{minipage}%
+    \end{minipage}    
     \begin{minipage}[t]{0.5\linewidth}
-        \includegraphics[width=0.7\linewidth]{2.png}
+        \centering
+        \includegraphics[width=1.0\linewidth]{2.png}
         \caption{基态和激发态之间的能量传递}
         \label{fig:2}
     \end{minipage}
 \end{figure}
-
-
 可以看出，此时拉比振荡没有发生。
 
 当失谐取0时，可以对拉比振荡进行求解，作为一个示例，取初态原子全部处于激发态，光场不携带能量。
 
-从图可以看到，能量在两个激发态和基态之间跃迁，同时在光场和原子之间交换。
+从图\ref{fig:2}可以看到，能量在两个激发态和基态之间跃迁，同时在光场和原子之间交换(图\ref{fig:3})。
+\begin{figure}[htbp]
+    \begin{minipage}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=1.0\linewidth]{3.png}
+        \caption{光场和原子之间的能量转移}
+        \label{fig:3}
+    \end{minipage}    
+    \begin{minipage}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=1.0\linewidth]{6.png}
+        \caption{能量耗散}
+        \label{fig:6}
+    \end{minipage}
+\end{figure}
+振荡的形式类似于三角函数，通过拟合可以求出其振荡频率。经过使用scipy包的optimize.curve\_fit方法拟合。可以得到振荡频率与参数相符，证明模拟是正确的。
 
-振荡的形式类似于三角函数，通过拟合可以求出其振荡频率。
-
-拟合出的振荡频率为，与参数相符，证明模拟是正确的。
-
-旋转波近似实际上只适用于低频情况，通过图 可以看到，在高频条件下旋转波近似结果与实际结果偏离很大。
+旋转波近似实际上只适用于低频情况，通过图\ref{fig:3}、\ref{fig:4}对比可以看到，在高频条件下旋转波近似的结果与实际结果偏离很大。
+\begin{figure}[htbp]
+    \begin{minipage}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=1.0\linewidth]{4.png}
+        \caption{RWA近似}
+        \label{fig:4}
+    \end{minipage}    
+    \begin{minipage}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=1.0\linewidth]{5.png}
+        \caption{不使用RWA近似}
+        \label{fig:5}
+    \end{minipage}
+\end{figure}
 \subsection{耗散效应}
 实际实验中包含了各种情况的耗散，耗散也可以利用Qutip框架进行计算。耗散过程的算符可以定义为：
+\begin{minted}[frame=lines,python3,mathescape,bgcolor=shadecolor]{python}
+def Get_c_ops(kappa, gamma, n_th_a):  # 衰减
+c_op_list = []
 
-带有耗散的计算给出的结果如图所示
+rate = kappa * (1 + n_th_a)
+if rate > 0.0:
+    c_op_list.append(np.sqrt(rate) * a)
 
-可以看到，耗散导致总能量衰减，振幅减弱。
+rate = kappa * n_th_a
+if rate > 0.0:
+    c_op_list.append(np.sqrt(rate) * a.dag())
+
+rate = gamma
+if rate > 0.0:
+    c_op_list.append(np.sqrt(rate) * sm)
+return c_op_list
+\end{minted}
+带有耗散的计算给出的结果如图\ref{fig:6}所示。可以看到，耗散导致总能量衰减，振幅减弱。
 \section{结论}
-拉比振荡的传统计算方法是采用数值法求解微分方程。本文使用python语言，利用Qutip框架，根据Jaynes - Fred Cummings 模型计算出拉比振荡随时间的演化。
+拉比振荡的传统计算方法是采用数值法求解微分方程。本文使用python语言，利用Qutip框架，根据Jaynes - Fred Cummings 模型，计算了拉比振荡过程中算符本征值随时间的演化。
 我们验证了拉比振荡的频率条件，RWA近似的使用范围，对拉比振荡进行了模拟与可视化，通过数据分析方法验证了拉比振荡的频率结果。
 \section{参考文献}
 \printbibliography[heading=none]
