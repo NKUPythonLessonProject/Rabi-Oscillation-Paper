@@ -1,0 +1,15 @@
+\documentclass[tikz, border=1pt]{standalone}
+\usepackage{amsmath,amssymb}
+\usepackage[compat=1.1.0]{tikz-feynman}
+\begin{document}
+\begin{tikzpicture}
+    \begin{feynman}
+        \diagram [horizontal=a to b] {
+        i1 [particle=\(g\)]
+        -- [fermion] a
+        -- [fermion] b [particle=\(e\)],
+        i2 -- [photon] a,
+        };
+    \end{feynman}
+\end{tikzpicture}
+\end{document}
