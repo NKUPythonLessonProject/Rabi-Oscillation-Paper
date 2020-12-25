@@ -6,7 +6,7 @@
 \usepackage{subfigure}
 \usepackage{xcolor}
 \usepackage{minted}
-\colorlet{shadecolor}{gray!40}
+\colorlet{shadecolor}{gray!15}
 \usefonttheme[onlymath]{serif}
 \setbeamertemplate{caption}[numbered]
 \usetheme{CambridgeUS}  
@@ -141,9 +141,134 @@
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile,shrink]
     \frametitle{利用Qutip构建系统的哈密顿量}
     Qubit对无限维的光子场无法处理，在研究问题的背景下，其希尔伯特空间可以通过截断进行处理，此时可以定义出其哈密顿量为：
-    
+    \begin{minted}[fontsize=\footnotesize,frame=lines,python3,mathescape,bgcolor=shadecolor]{python}
+        N = 50
+        #$\hat a$
+        a = tensor(destroy(N), qeye(2))
+        #$\hat \sigma$
+        sm = tensor(qeye(N), destroy(2))
+        #$\hat H$
+        H = wc * a.dag() * a + wa * sm.dag() * sm \
+        + 0.5 * wr * (a.dag() * sm + a * sm.dag())
+    \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{初态定义为}
+    \begin{minted}[fontsize=\footnotesize,frame=lines,python3,mathescape,bgcolor=shadecolor]{python}
+        #$\left|\psi(0)\right>$
+        psi0 = tensor(basis(N, n), cg * basis(2, 0) \
+            + ce * basis(2, 1))
+    \end{minted}
+    态随时间演化可以利用$mesolve$求出。特别的，实践中一般关注特定算符的期望值，算符的期望值随时间的演化可以直接求出。
+
+    振荡的形式类似于三角函数，通过拟合可以求出其振荡频率。使用scipy包的optimize.curve\_fit方法拟合，可以得到振荡频率与参数相符，证明模拟是正确的。
+\end{frame}
+
+\begin{frame}
+    \frametitle{频率条件}
+    \begin{columns}
+    \column{0.4\linewidth}
+    当失谐$\delta = \omega_0 - \omega$不趋近于0时，拉比振荡不会发生，此情况结果为图\ref{fig:1}所示。
+    \column{0.6\linewidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{1.png}
+        \caption{振荡频率条件破坏}
+        \label{fig:1}
+    \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{求解方法}
+    \begin{minted}[fontsize=\footnotesize,frame=lines,python3,mathescape,bgcolor=shadecolor]{python}
+        wc = 1.0 * 2 * np.pi
+        wa = 1.5 * 2 * np.pi
+        wr = 0.05 * 2 * np.pi
+        H = Get_H_operator(wc, wa, wr, True)
+        psi0 = Get_initial_state(0, 1, 0)
+        tlist = np.linspace(0, 25, 100)
+        c_op_list = Get_c_ops(0, 0, 0)
+        output = mesolve(H, psi0, tlist, c_op_list,\
+         [a.dag() * a, sm.dag() * sm])
+    \end{minted}
+\end{frame}
+
+\begin{frame}
+    \frametitle{能量传递}
+    \begin{columns}
+    \column{0.2\linewidth}
+    当失谐取0时，可以对拉比振荡进行求解，作为一个示例，取初态原子全部处于激发态，光场不携带能量。
+    \column{0.4\linewidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=1.0\linewidth]{3.png}
+        \caption{光场和原子之间的能量转移}
+        \label{fig:3}
+    \end{figure}
+    \column{0.4\linewidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=1.0\linewidth]{2.png}
+        \caption{基态和激发态之间的能量传递}
+        \label{fig:2}
+    \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{RWA近似失效}
+    \begin{columns}
+    \column{0.2\linewidth}
+    旋转波近似实际上只适用于低频情况，通过图\ref{fig:3}、\ref{fig:4}对比可以看到，在高频条件下旋转波近似的结果与实际结果偏离很大。
+    \column{0.4\linewidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=1.0\linewidth]{4.png}
+        \caption{RWA近似}
+        \label{fig:4}
+    \end{figure}
+    \column{0.4\linewidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=1.0\linewidth]{5.png}
+        \caption{实际情况}
+        \label{fig:5}
+    \end{figure}
+    \end{columns}
+\end{frame}
+
+\begin{frame}
+    \frametitle{耗散效应}
+    \begin{columns}
+    \column{0.4\linewidth}
+    实际实验中包含了各种情况的耗散，耗散也可以利用Qutip框架进行计算。
+    \column{0.6\linewidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{6.png}
+        \caption{能量耗散}
+        \label{fig:6}
+    \end{figure}
+    \end{columns}
+\end{frame}
+
+\section{结论}
+\begin{frame}
+    \frametitle{结论}
+    拉比振荡的传统计算方法是采用数值法求解微分方程。本文使用python语言，利用Qutip框架，根据Jaynes - Fred Cummings 模型，计算了拉比振荡过程中算符本征值随时间的演化。
+
+    我们验证了拉比振荡的频率条件，RWA近似的使用范围，对拉比振荡进行了模拟与可视化，通过数据分析方法验证了拉比振荡的频率结果。
+\end{frame}
+
+\section{参考文献}
+\begin{frame}[allowframebreaks]
+    \frametitle{参考文献}
+    \printbibliography[heading=none]
+\end{frame}
+
 \end{document}
